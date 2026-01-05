@@ -1,5 +1,0 @@
-[project]
-name = "u2c-exchange-bot"
-version = "1.0.0"
-description = "Telegram bot for exchange requests (CBR+NBU+Binance for USDT pairs)"
-requires-python = ">=3.11"
