@@ -262,7 +262,7 @@ async def show_rate(
 
     # Show user (Markdown ok)
     user_text = (
-        f"Курс: 1 {give} = *{rate:.2f}* {get}\n"
+        f"Курс: 1 {give} = *{rate:.3f}* {get}\n"
         f"Отдам/получу: *{give_out} {give}* → *{get_out} {get}*\n\n"
         "Теперь напишите ваш контакт (например @username или телефон)."
     )
