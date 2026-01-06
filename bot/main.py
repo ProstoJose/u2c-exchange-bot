@@ -69,7 +69,11 @@ async def cmd_start(message: Message, state: FSMContext, db_session_factory) -> 
 async def start_calc(call: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(ExchangeFlow.choose_give)
     await state.update_data()
-    await call.message.edit_text("Выберите валюту *Отдаёте*:", reply_markup=kbd_choose_currency("give"), parse_mode=ParseMode.MARKDOWN)
+    await call.message.edit_text(
+        "Выберите валюту *Отдаёте*:",
+        reply_markup=kbd_choose_currency("give"),
+        parse_mode=ParseMode.MARKDOWN,
+    )
     await call.answer()
 
 
@@ -81,7 +85,11 @@ async def choose_give(call: CallbackQuery, state: FSMContext) -> None:
         return
     await state.update_data(give_currency=give)
     await state.set_state(ExchangeFlow.choose_get)
-    await call.message.edit_text("Выберите валюту *Получите*:", reply_markup=kbd_choose_currency("get", exclude=give), parse_mode=ParseMode.MARKDOWN)
+    await call.message.edit_text(
+        "Выберите валюту *Получите*:",
+        reply_markup=kbd_choose_currency("get", exclude=give),
+        parse_mode=ParseMode.MARKDOWN,
+    )
     await call.answer()
 
 
@@ -190,7 +198,7 @@ async def show_rate(
 
     try:
         rr = await rate_service.get_rate(give, get)
-    except Exception as e:
+    except Exception:
         await call.answer("Не удалось получить курс. Попробуйте позже.", show_alert=True)
         logging.exception("Rate fetch failed")
         return
@@ -231,27 +239,28 @@ async def show_rate(
 
     await state.update_data(order_id=order.id, rate=rate, give_out=give_out, get_out=get_out, sources=sources_text)
 
-    # Notify admin about calculation
+    # Notify admin about calculation (PLAIN TEXT, no Markdown)
     ulabel = _user_label(call.from_user)
     admin_text = (
-        "🧮 *Расчёт*\n"
+        "🧮 Расчёт\n"
         f"👤 Пользователь: {ulabel}\n"
         f"🆔 Заказ: #{order.id}\n"
-        f"💱 Пара: *{give} → {get}*\n"
-        f"📌 Ввод: *{'отдаю' if mode == 'give' else 'получу'}* {amount}\n"
+        f"💱 Пара: {give} → {get}\n"
+        f"📌 Ввод: {'отдаю' if mode == 'give' else 'получу'} {amount}\n"
         f"📍 Откуда: {from_loc}\n"
         f"📍 Куда: {to_loc}\n"
-        f"📈 Курс: 1 {give} = *{rate:.2f}* {get}\n"
-        f"➡️ Отдам/получу: *{give_out} {give}* → *{get_out} {get}*\n"
+        f"📈 Курс: 1 {give} = {rate:.2f} {get}\n"
+        f"➡️ Отдам/получу: {give_out} {give} → {get_out} {get}\n"
         f"🔎 Источники: {sources_text or '—'}\n"
-        f"⏱ AsOf (UTC): {rr.as_of.strftime('%Y-%m-%d %H:%M')}")
+        f"⏱ AsOf (UTC): {rr.as_of.strftime('%Y-%m-%d %H:%M')}"
+    )
 
     try:
-        await call.bot.send_message(config.admin_id, admin_text, parse_mode=ParseMode.MARKDOWN)
+        await call.bot.send_message(config.admin_id, admin_text)  # <-- без parse_mode
     except Exception:
-        logging.exception("Failed to notify admin")
+        logging.exception("Failed to notify admin (calc)")
 
-    # Show user
+    # Show user (Markdown ok)
     user_text = (
         f"Курс: 1 {give} = *{rate:.2f}* {get}\n"
         f"Отдам/получу: *{give_out} {give}* → *{get_out} {get}*\n\n"
@@ -294,24 +303,26 @@ async def submit(call: CallbackQuery, state: FSMContext, config: Config, db_sess
     async with db_session_factory() as db:
         await set_order_contact_and_submit(db, order_id=order_id, contact=contact)
 
+    # Notify admin about submit (PLAIN TEXT, no Markdown)
     ulabel = _user_label(call.from_user)
     admin_text = (
-        "🧾 *Заявка*\n"
+        "🧾 Заявка\n"
         f"👤 Пользователь: {ulabel}\n"
         f"🆔 Заказ: #{order_id}\n"
-        f"💱 Пара: *{give} → {get}*\n"
-        f"📌 Ввод: *{'отдаю' if mode == 'give' else 'получу'}* {amount}\n"
+        f"💱 Пара: {give} → {get}\n"
+        f"📌 Ввод: {'отдаю' if mode == 'give' else 'получу'} {amount}\n"
         f"📍 Откуда: {from_loc}\n"
         f"📍 Куда: {to_loc}\n"
-        f"📈 Курс: 1 {give} = *{rate:.2f}* {get}\n"
-        f"➡️ Отдам/получу: *{give_out} {give}* → *{get_out} {get}*\n"
-        f"📞 Контакт: *{contact}*\n"
-        f"🔎 Источники: {sources_text or '—'}")
+        f"📈 Курс: 1 {give} = {rate:.2f} {get}\n"
+        f"➡️ Отдам/получу: {give_out} {give} → {get_out} {get}\n"
+        f"📞 Контакт: {contact}\n"
+        f"🔎 Источники: {sources_text or '—'}"
+    )
 
     try:
-        await call.bot.send_message(config.admin_id, admin_text, parse_mode=ParseMode.MARKDOWN)
+        await call.bot.send_message(config.admin_id, admin_text)  # <-- без parse_mode
     except Exception:
-        logging.exception("Failed to notify admin")
+        logging.exception("Failed to notify admin (submit)")
 
     await call.message.edit_text("Заявка отправлена. Администратор скоро с вами свяжется.")
     await state.clear()
@@ -353,9 +364,6 @@ async def main() -> None:
     dp["config"] = cfg
     dp["db_session_factory"] = session_factory
     dp["rate_service"] = RateService(ttl_seconds=cfg.rate_cache_ttl_seconds)
-
-    # IMPORTANT (aiogram v3): don't use bot["..."] dict-style storage.
-    # Dependencies are injected into handlers from dp.workflow_data (dp["..."]).
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
