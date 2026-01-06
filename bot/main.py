@@ -174,7 +174,7 @@ async def enter_to_location(message: Message, state: FSMContext) -> None:
         f"• Сумма: *{amount}*\n"
         f"• Откуда: *{data.get('from_location')}*\n"
         f"• Куда: *{data.get('to_location')}*\n\n"
-        "Нажмите *Показать курс* — мы посчитаем и отправим вам результат (и уведомим администратора)."
+        "Нажмите *Показать курс* — мы посчитаем и предоставим вам результат."
     )
     await message.answer(summary, reply_markup=kbd_show_rate(), parse_mode=ParseMode.MARKDOWN)
 
@@ -264,7 +264,7 @@ async def show_rate(
     user_text = (
         f"Курс: 1 {give} = *{rate:.2f}* {get}\n"
         f"Отдам/получу: *{give_out} {give}* → *{get_out} {get}*\n\n"
-        "Теперь напишите ваш контакт (например @username, телефон или любой текст)."
+        "Теперь напишите ваш контакт (например @username или телефон)."
     )
     await call.message.edit_text(user_text, parse_mode=ParseMode.MARKDOWN)
     await state.set_state(ExchangeFlow.enter_contact)
