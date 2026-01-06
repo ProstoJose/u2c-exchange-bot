@@ -203,7 +203,7 @@ async def show_rate(
         logging.exception("Rate fetch failed")
         return
 
-    rate = round(rr.rate, 2)
+    rate = round(rr.rate, 3)
     sources_text = _sources_to_text(rr.path)
 
     if mode == "give":
@@ -249,7 +249,7 @@ async def show_rate(
         f"📌 Ввод: {'отдаю' if mode == 'give' else 'получу'} {amount}\n"
         f"📍 Откуда: {from_loc}\n"
         f"📍 Куда: {to_loc}\n"
-        f"📈 Курс: 1 {give} = {rate:.2f} {get}\n"
+        f"📈 Курс: 1 {give} = {rate:.3f} {get}\n"
         f"➡️ Отдам/получу: {give_out} {give} → {get_out} {get}\n"
         f"🔎 Источники: {sources_text or '—'}\n"
         f"⏱ AsOf (UTC): {rr.as_of.strftime('%Y-%m-%d %H:%M')}"
@@ -313,7 +313,7 @@ async def submit(call: CallbackQuery, state: FSMContext, config: Config, db_sess
         f"📌 Ввод: {'отдаю' if mode == 'give' else 'получу'} {amount}\n"
         f"📍 Откуда: {from_loc}\n"
         f"📍 Куда: {to_loc}\n"
-        f"📈 Курс: 1 {give} = {rate:.2f} {get}\n"
+        f"📈 Курс: 1 {give} = {rate:.3f} {get}\n"
         f"➡️ Отдам/получу: {give_out} {give} → {get_out} {get}\n"
         f"📞 Контакт: {contact}\n"
         f"🔎 Источники: {sources_text or '—'}"
